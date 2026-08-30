@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Firmware update of Phoscon products via USB."/>
+  <meta name="keywords" content="Firmware update, Conbee 3, ConBee III, FLS-M, FLS M"/>
+  <meta name="author" content="Phoscon" />
+  <meta name="copyright" content="dresden elektronik ingenieurtechnik gmbh" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Phoscon Firmware Updater</title>
+
+  <style>
+    * {
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto;
+    }
+
+    :root {
+        --phoscon-yellow: #f8c448;
+        --phoscon-dark: #202020;
+        --phoscon-white: #fdfeff;
+        --phoscon-gray70: #a0a0a0;
+        --font-size-xs: 16px;
+        --font-size-md: 20px;
+        --font-size-lg: 24px;
+    }
+
+    body {
+        color: var(--phoscon-white);
+        background-color: var(--phoscon-dark);
+        padding: 1em;
+        font-size: var(--font-size-md);
+    }
+
+    .container {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    a.btn {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    button.btn {
+        border-style: solid;
+        font-size: inherit;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.25rem .5rem;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    .btn-primary {
+      background-color: var(--phoscon-yellow);
+      color: var(--phoscon-dark);
+    }
+
+    .btn-secondary {
+        color: inherit;
+        border-width: 2px;
+        border-style: solid;
+        border-color: inherit;
+        background-color: inherit;
+    }
+
+    main {
+        max-width: 42rem;
+    }
+
+    main h1 {
+        color: var(--phoscon-yellow);
+        font-size: var(--font-size-xs);
+        font-style: normal;
+        font-weight: 400;
+        margin: 0.35rem 0.2rem;
+        margin-top: 2em;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    main h1 a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    #app {
+        padding: 1rem;
+        color: var(--phoscon-dark);
+        background-color: var(--phoscon-yellow);
+        border-radius: 0.33rem;
+    }
+
+    h2 {
+        font-size: var(--font-size-lg);
+        text-transform: uppercase;
+    }
+
+    #app h2 {
+        margin: 0;
+    }
+
+    ol { /* prevent indent */
+        padding-left: 0;
+        list-style-position: inside;
+    }
+
+    /*
+    button:disabled {
+      background-color: navy;
+      color: var(--phoscon-gray70);
+    }
+    */
+  </style>
+</head>
+<body>
+    <header>
+        
+    </header>
+
+    <main>
+        <h1><a href="#start">START</a> <span>FIRMWARE UPDATER</span>  <div><a href="#faq">FAQ</a> <span style="margin-left: 1.4rem;">v0.7.2</span></div></h1>
+
+        <div id="app">
+
+        </div>
+
+    </main>
+
+<!-- Pages shown in various states -->
+<template id="unsupported_browser">
+  <h2>Browser unsupported</h2>
+  <p>Please use the Chrome or Edge browser in order to use this tool.</p>
+</template>
+
+<template id="page_faq">
+    <h2>Frequentry asked questions</h2>
+
+    <div class="container">
+        <details>
+            <summary>My device isn't recognized</summary>
+
+            <p>
+                Ensure to use a USB data cable. Some USB cables are for charging only and can't transmit data.
+            </p>
+
+            <p>
+                Some USB slots or hubs may cause problems, here please try another USB slot on the computer.
+            </p>
+
+            <p>
+                For ConBee ensure no other application like deCONZ, Zigbee2MQTT or ZHA is using the device. Only one application can access the device.
+            </p>
+        </details>
+
+        <details>
+            <summary>Where to find older firmware versions?</summary>
+
+            <p>
+                This tool provides recent and recommended firmware versions.
+                Older versions can be downloaded manually and updated via the <q>Local file</q> option.
+            </p>
+            
+            <p>
+                ConBee I, II and III<br/>
+                <a href="https://deconz.dresden-elektronik.de/deconz-firmware" target="_blank">https://deconz.dresden-elektronik.de/deconz-firmware</a>
+            </p>
+            <p>
+                FLS-M<br/>
+                <a href="https://deconz.dresden-elektronik.de/flsm-firmware" target="_blank">https://deconz.dresden-elektronik.de/flsm-firmware</a>
+            </p>
+        </details>
+
+        <details>
+            <summary>
+                Alternatives to the Web Updater
+            </summary>
+
+            <p>
+                The command line tool GCFFlasher works natively and also supports updating RaspBee I and II.
+                It can be downloaded from GitHub <a href="https://github.com/dresden-elektronik/gcfflasher/releases" target="_blank">https://github.com/dresden-elektronik/gcfflasher</a>
+            </p>
+
+            <p>
+                Product and platform specific instruction can be found at <a href="https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Update-deCONZ-manually" target="_blank">wiki/Update-deCONZ-manually</a>
+            </p>
+        </details>
+
+        <details>
+            <summary>
+                Does the Web Updater work offline?
+            </summary>
+
+            <p>
+                Yes, you can save this HTML page on your computer and open it locally.
+                Only the firmware files need to be obtained separately.
+            </p>
+
+            <p>
+                The Web Updater is a single self-contained HTML file with no external depenencies.
+            </p>
+        </details>
+
+                <details>
+            <summary>
+                Where to find further support?
+            </summary>
+
+            <p>
+                Please refer to our support page for further help: <br/>
+                <a href="https://phoscon.de/support" target="_blank">https://phoscon.de/support</a>
+            </p>
+        </details>
+    </div>
+
+    <p>
+       <a class="btn btn-secondary" href="#start">Back</a>
+    </p>
+</template>
+
+<template id="page_product_select">
+    <h2>Select Product</h2>
+
+    <p>
+       <a class="btn btn-secondary" href="#productcb3">ConBee III</a>
+       <a class="btn btn-secondary" href="#productflsm">FLS-M</a>
+    </p>
+</template>
+
+<template id="page_firmware_select">
+  <h2>Select firmware</h2>
+  
+    <p><span id="product_name"></span> firmware version to be flashed.</p>
+    <div>
+        <!--
+        <button class="btn btn-secondary">v1.2.0-beta</button>
+        <button class="btn btn-secondary">v1.1.0</button>
+        -->
+
+        <span id="local_file">
+            <input type="file" id="fileInput" style="display: none;" accept=".gcf">
+            <label class="btn btn-secondary" for="fileInput">Local file</label>
+        </span>
+    </div>
+</template>
+
+<template id="page_device_select">
+  <h2>USB connection</h2>
+  
+    <p>
+    <ol>
+        <li>Connect the <span id="product_name"></span> via USB.</li>
+        <li>Then click on <q>Connect</q> and in the browser popup select the USB device.</li>
+    </ol>
+    </p>
+    <p>
+        <small>Note: The device might be named USB JTAG/serial debug unit.</small>
+    </p>
+  <button id="btn-get-dev" class="btn btn-primary">Connect</button>
+</template>
+
+<template id="page_wait_disconnect">
+  <h2>USB connection</h2>
+
+  <p>
+    OK to proceed first unplug the <span id="product_name"></span> from USB.
+  </p>
+
+</template>
+
+<template id="page_disconnect_wait_secs">
+  <h2>USB connection</h2>
+
+  <p>
+    Now wait <strong><span id="duration"></span> seconds</strong>.
+  </p>
+  <p>
+     (keep <span id="product_name"></span> disconnected from USB).
+  </p>
+
+</template>
+
+<template id="page_wait_reconnect">
+  <h2>USB connection</h2>
+
+  <p>
+    OK now connect the <span id="product_name"></span> to USB again to start flashing the firmware.
+  </p>
+
+</template>
+
+
+<template id="page_updating">
+  <h2>Updating</h2>
+
+  <p>
+    The firmware is now being programmed to the <span id="product_name"></span>.
+  </p>
+
+  <div id="progessbar"></div>
+
+  <p id="progess">
+    <span id="percent"></span> % done.
+  </p>
+
+</template>
+
+<template id="page_update_done">
+  <h2>Update finished</h2>
+
+  <p>
+    The firmware on <span id="product_name"></span> has been updated.
+  </p>
+
+</template>
+
+<template id="page_update_failed">
+  <h2>Error</h2>
+
+  <p>
+    Something went wrong, please try again. The FAQ may further help to trouble shoot.
+  </p>
+  <p>
+    <a class="btn btn-secondary" href="#faq">FAQ</a>
+    <a id="try_again" class="btn btn-secondary" href="#productselect">Back</a>
+  </p>
+</template>
+
+</body>
+
+<script type="text/javascript">
+
+/* Bootloader V3.x serial protocol */
+const BTL_MAGIC = 0x81;
+const BTL_ID_REQUEST = 0x02;
+const BTL_ID_RESPONSE = 0x82;
+const BTL_FW_UPDATE_REQUEST = 0x03;
+const BTL_FW_UPDATE_RESPONSE = 0x83;
+const BTL_FW_DATA_REQUEST = 0x04;
+const BTL_FW_DATA_RESPONSE = 0x84;
+
+const COM_STATE_INIT = 'com_state_init';
+const COM_STATE_VX_WAIT_RESET_RSP = 'com_state_vx_wait_reset_rsp';
+const COM_STATE_VX_WAIT_TIMER = 'com_state_vx_wait_timer';
+const COM_STATE_V3_WAIT_ID_RSP = 'com_state_v3_wait_id_rsp';
+const COM_STATE_V3_WAIT_ID_RSP_AFTER_UPDATE = 'com_state_v3_wait_id_rsp_after_update';
+const COM_STATE_V3_WAIT_SYNC_RSP = 'com_state_v3_wait_sync_rsp';
+const COM_STATE_V3_WAIT_DATA_REQ = 'com_state_v3_wait_data_req';
+const COM_STATE_V3_WAIT_ASCII = 'com_state_v3_wait_ascii'
+//const COM_STATE_DEV_SELECTED = 'com_state_dev_selected'
+
+const app = {
+    dbg: false,
+    state: COM_STATE_INIT,
+    firmwareVersions: {},
+    rx : {
+        bufpos: 0,
+        crc: 0,
+        escaped: 0,
+        buf: []
+    }
+};
+
+let portReader;
+let portWriter;
+
+const routes = {
+
+};
+
+let keepReading = true;
+
+//-----------------------------------------------------------------------------
+// SLIP protocol - ported from C version
+const FR_END   = 0xC0;
+const FR_ESC   = 0xDB;
+const T_FR_END = 0xDC;
+const T_FR_ESC = 0xDD;
+const ASC_FLAG = 0x01;
+
+async function protSendFlagged(writer, data) {
+    let len = data.length;
+    let c = 0;
+    let i = 0;
+    let crc = 0;
+    let arr = [];
+
+    // put an end before the packet
+    arr.push(FR_END);
+
+    while (i < len) {
+        c = data[i++];
+        crc += c;
+
+        switch (c) {
+        case FR_ESC:
+            arr.push(FR_ESC);
+            arr.push(T_FR_ESC);
+            break;
+        case FR_END:
+            arr.push(FR_ESC);
+            arr.push(T_FR_END);
+            break;
+        default:
+            arr.push(c);
+            break;
+        }
+    }
+
+    c = (~crc + 1) & 0xFF;
+    if (c == FR_ESC) {
+        arr.push(FR_ESC);
+        arr.push(T_FR_ESC);
+    } else if (c == FR_END) {
+        arr.push(FR_ESC);
+        arr.push(T_FR_END);
+    } else {
+        arr.push(c);
+    }
+
+    c = ((~crc + 1) >> 8) & 0xFF;
+    if (c == FR_ESC) {
+        arr.push(FR_ESC);
+        arr.push(T_FR_ESC);
+    } else if (c == FR_END) {
+        arr.push(FR_ESC);
+        arr.push(T_FR_END);
+    } else {
+        arr.push(c);
+    }
+
+    arr.push(FR_END);
+
+    if (app.dbg) {
+        let dbg = [];
+        for (let i = 0; i < arr.length; i++)
+            dbg.push(arr[i].toString(16));
+        console.log("send:", dbg);
+    }
+
+    await writer.write(new Uint8Array(arr));
+    await writer.ready;
+}
+
+function protReceiveFlagged(app, data)
+{
+    let c = 0;
+    let pos = 0;
+    let len = data.length;
+    if (len == 0)
+       return;
+
+    let rx = app.rx;
+
+    while (pos < len)
+    {
+        c = data[pos];
+        pos++;
+
+        switch (c) {
+            case FR_END:
+                if (rx.escaped) {
+                    // invalid
+                    rx.bufpos = 0;
+                    rx.crc = 0;
+                } else {
+                    if (rx.bufpos >= 2) {
+                        let crcvalid = 0;
+                        // Checksum bytes are added to the checksum rx->crc - substract them here
+                        rx.crc -= rx.buf[rx.bufpos-1];
+                        rx.crc -= rx.buf[rx.bufpos-2];
+                        // TODO clean this messy condition up
+                        if ((((~(rx.crc) +1) & 0xFF) == rx.buf[rx.bufpos - 2]) &&
+                            ((((~(rx.crc) +1) >> 8) & 0xFF) == rx.buf[rx.bufpos - 1])) {
+                            crcvalid = 1;
+                        }
+
+                        if (crcvalid) {
+                            onPacket(app, rx.buf.subarray(0, rx.bufpos - 2));
+                        } else {
+    //                        console.log("invalid CRC, rx.buf.pos", rx.bufpos);
+                        }
+                    }
+                    rx.bufpos = 0;
+                    rx.crc = 0;
+                }
+            rx.escaped &= ~ASC_FLAG;
+            continue;
+
+            case FR_ESC:
+                rx.escaped |= ASC_FLAG;
+                continue;
+      }
+
+      let cont = false;
+      if (rx.escaped & ASC_FLAG) {
+         // translate the 2 byte escape sequence back to original char
+         rx.escaped &= ~ASC_FLAG;
+
+         switch (c) {
+            case T_FR_ESC: c = FR_ESC; break;
+            case T_FR_END: c = FR_END; break;
+            default:
+                cont = true;
+         }
+      }
+
+      if (cont)
+        continue;
+
+      /* we reach here with every byte for the buffer
+         legacy BUG: checksum bytes are added but should not be */
+      if (rx.bufpos < rx.buf.length) {
+         rx.buf[rx.bufpos++] = c;
+         rx.crc += c;
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function navigateTo(url) {
+    window.location.href = url;
+    //window.history.replaceState(window.history.state, "", url);
+}
+
+function loadViewTemplate(name) {
+    const element = app.div;
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+
+    const temp = document.getElementById(name);
+    const clone = temp.content.cloneNode(true);
+    app.div.appendChild(clone);
+}
+
+//--------------- ONLINE FIRMWARE VERSIONS ------------------------------
+
+async function getServerFirmwareVersions() {
+    const response = await fetch('https://phoscon.de/downloads/phoscon_firmware.json');
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    app.firmwareVersions = data; 
+}
+
+//--------------- ROUTES --------------------------------------------------
+
+routes.start = function routeStart() {
+    // start fresh
+    if (sessionStorage.getItem('product_name')) {
+        console.log("force page refresh");
+        location.reload(true); // force full reload to start fresh
+    }
+
+    sessionStorage.clear();
+
+    if ("serial" in navigator) {
+        navigateTo('#productselect');
+    } else {
+        navigateTo('#unsupportedbrowser');
+    }
+}
+
+routes.faq = function routeFAQ() {
+
+    loadViewTemplate('page_faq');
+}
+
+routes.unsupportedbrowser = function routeUnsupportedBrowser() {
+
+    loadViewTemplate('unsupported_browser');
+}
+
+routes.productselect = function routeProductSelect() {
+    loadViewTemplate('page_product_select');
+}
+
+routes.productcb3 = function routeProductConBee3() {
+
+    app.deviceFilters = [
+        { usbVendorId: 0x0403, usbProductId: 0x6015 } // ConBee III
+    ];
+
+    sessionStorage.setItem('product_name', 'ConBee III');
+    sessionStorage.setItem('baudrate', 115200);
+    sessionStorage.setItem('btl', 'v3');
+    sessionStorage.setItem('uart_reset', 1);
+    sessionStorage.setItem('fw_key', "cb3");
+
+    navigateTo('#firmwareselect');
+}
+
+routes.productflsm = function routeProductFlsm() {
+
+    app.deviceFilters = [
+        { usbVendorId: 0x303a, usbProductId: 0x1001 }  // FLS-M
+    ];
+
+    sessionStorage.setItem('product_name', 'FLS-M');
+    sessionStorage.setItem('baudrate', 115200);
+    sessionStorage.setItem('btl', 'v3');
+    sessionStorage.setItem('uart_reset', 1);
+    sessionStorage.setItem('fw_key', "flsm");
+
+    navigateTo('#firmwareselect');
+}
+
+
+routes.firmwareselect = async function routeFirmwareSelect() {
+    const productName = sessionStorage.getItem('product_name');
+    const baudrate = sessionStorage.getItem('baudrate');
+    const fwKey = sessionStorage.getItem('fw_key');
+
+    if (!productName || !baudrate || !fwKey) {
+        navigateTo('#start');
+        return;
+    }
+
+    loadViewTemplate('page_firmware_select');
+    app.div.querySelector('#product_name').textContent = productName;
+
+    getServerFirmwareVersions()
+    .then(() => {
+
+        const localFile = app.div.querySelector('#local_file');
+        if (fwKey in app.firmwareVersions) {
+            const fws = app.firmwareVersions[fwKey];
+
+            for (const [key, value] of Object.entries(fws.firmware)) {
+                console.log(key, value);
+                const btn = document.createElement("button");
+                btn.classList.add('btn', 'btn-secondary');
+                btn.textContent = `${value.app} ${value.tag}`;
+                btn.setAttribute('data-url', value.url);
+
+                // provide an tooltip
+                try {
+                    var fwDate = new Date(value.date).toLocaleDateString();
+                    btn.title = `${value.type} version | ${fwDate}`;
+                } catch (e) {
+                     console.log(e);
+                };
+
+                btn.addEventListener('click', async (e) => {
+                    try {
+                        const url = e.target.getAttribute('data-url');
+                        const rsp = await fetch(url);
+
+                        if (!rsp.ok)
+                            throw new Error(`firmware download failed with status: ${rsp.status}`);
+
+                        const blob = await rsp.blob();
+
+                        app.gcfFile = await blob.arrayBuffer();
+                        app.gcfFileDataView = new DataView(app.gcfFile);
+                        app.gcfHeader = gcfParseFile(app.gcfFileDataView);
+
+                        // console.log(app.gcfHeader);
+                        if (app.gcfHeader.valid) {
+                             navigateTo('#deviceselect');
+                        } else {
+                            // TODO show error
+                            throw new Error("invalid firmware file");
+                        }
+                    } catch (e) {
+                        console.log("failed to obtain firmware from server.");
+                        console.error(err)
+                    }
+                });
+
+                localFile.parentNode.insertBefore(btn, localFile);
+            }
+        }
+
+    })
+    .catch((e) => {
+        console.log("failed to query firmware versions from server.");
+        console.log(e);
+    });
+       
+    //---------------------------------------------------------
+    app.gcfFile = null;
+    app.gcfFileDataView = null;
+    app.gcfHeader = null;
+
+    //---------------------------------------------------------
+
+    app.div.querySelector('#fileInput').addEventListener('change', (event) => {
+        const file = event.target.files[0]; // Get the first selected file
+        if (!file) {
+            // TODO show error
+            return;
+        } 
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            app.gcfFile = e.target.result;
+            app.gcfFileDataView = new DataView(app.gcfFile);
+
+            app.gcfHeader = gcfParseFile(app.gcfFileDataView);
+
+            console.log(app.gcfHeader);
+            if (app.gcfHeader.valid) {
+                navigateTo('#deviceselect');
+            } else {
+                // TODO show error
+                return;
+            }
+        };
+
+        reader.onerror = function() {
+            console.error("Error reading file", reader.error);
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+routes.deviceselect = async function routeDeviceSelect() {
+
+    const productName = sessionStorage.getItem('product_name');
+    const uartReset = sessionStorage.getItem('uart_reset');
+
+    if (!productName || !app.deviceFilters || uartReset === null) {
+        navigateTo('#start');
+        return;
+    }
+
+    loadViewTemplate('page_device_select');
+
+    // Get all serial ports the user has previously granted the website access to.
+    const ports = await navigator.serial.getPorts();
+
+    for (let i = 0; i < ports.length; i++) {
+        const port = ports[i];
+        console.log("forget", port.getInfo());
+        // only interested in one device
+        // forget any devices previously connected here
+        await port.forget();
+    }
+
+    app.div.querySelector('#product_name').textContent = productName;
+
+    const btnConnect = app.div.querySelector("button");
+
+    btnConnect.addEventListener('click', async () => {
+        // Prompt user to select any serial port.
+        /*
+        const filters = [
+            { usbVendorId: 0x1cf1, usbProductId: 0x0030 }, // ConBee II
+            { usbVendorId: 0x0403, usbProductId: 0x6015 }, // ConBee III
+            { usbVendorId: 0x303a, usbProductId: 0x1001 }  // FLS-M
+        ];
+        */
+
+        try {
+            const port = await navigator.serial.requestPort({filters: app.deviceFilters});
+            app.port = port;
+
+            console.log("device filters:");
+            console.log(app.deviceFilters);
+
+            console.log("selected:");
+            console.log(port.getInfo());
+
+            if (parseInt(uartReset) == 0) {
+                navigateTo('#waitdisconnect');
+            } else {
+                navigateTo('#updating');
+            }
+            
+        } catch (e) {
+            // Abort pressed or any error
+            console.log(e);
+        }
+    });
+}
+
+routes.waitdisconnect = async function routeWaitDisconnect() {
+
+    const productName = sessionStorage.getItem('product_name');
+
+    if (!productName || !app.deviceFilters) {
+        navigateTo('#start');
+        return;
+    }
+
+    loadViewTemplate('page_wait_disconnect');
+   
+    app.div.querySelector('#product_name').textContent = productName;
+
+    let disco = (event) => {
+        console.log("disconnect event:", event.target);
+        navigator.serial.removeEventListener("disconnect", disco);
+
+        navigateTo('#waitunplugged');
+    };
+
+    navigator.serial.addEventListener("disconnect", disco);
+    
+}
+
+routes.waitunplugged = async function routeWaitUnplugged() {
+
+    const productName = sessionStorage.getItem('product_name');
+
+    if (!productName || !app.deviceFilters) {
+        navigateTo('#start');
+        return;
+    }
+
+    loadViewTemplate('page_disconnect_wait_secs');
+   
+    const durText = app.div.querySelector('#duration');
+    app.div.querySelector('#product_name').textContent = productName;
+
+    let duration = 10;
+
+    durText.textContent = duration;
+
+    let timerId = setInterval(() => {
+        duration -= 1;
+        durText.textContent = duration;
+        if (duration === 0) {
+            clearInterval(timerId);
+            navigateTo('#waitreconnect');
+        }
+    }, 1000) ;
+}
+
+routes.waitreconnect = async function routeWaitReconnect() {
+
+    const productName = sessionStorage.getItem('product_name');
+
+    if (!productName || !app.deviceFilters) {
+        navigateTo('#start');
+        return;
+    }
+
+    loadViewTemplate('page_wait_reconnect');
+
+    app.div.querySelector('#product_name').textContent = productName;
+
+    const conn = (event) => {
+        app.port = event.target;
+        navigator.serial.removeEventListener("connect", conn);
+        navigateTo('#updating');
+    };
+
+    navigator.serial.addEventListener("connect", conn);
+}
+
+routes.updating = async function routeUpdating() {
+
+    const productName = sessionStorage.getItem('product_name');
+
+    if (!productName || !app.port) {
+        navigateTo('#start');
+        return;
+    }
+
+    loadViewTemplate('page_updating');
+
+    app.div.querySelector('#product_name').textContent = productName;
+    const perc = app.div.querySelector('#percent');
+
+    function cb(e) {
+        if (e.t === 'get') {
+            let total = e.offset + e.remaining;
+            if (total > 0) {
+                let norm = e.offset / total;
+                let pc = (100 * norm).toFixed(0);
+                perc.textContent = pc;
+
+            }
+        } else if (e.err) {
+            console.log(e);
+            navigateTo('#updatefailed');
+        } else if (e.t === 'verified') {
+            console.log(e);
+            navigateTo('#updatedone');
+        } else {
+            console.log(e);
+        }
+
+    }
+
+    try {
+        await updateFirmwareV3(app, cb);
+    } catch (e) {
+        console.log(e);
+        navigateTo('#updatefailed');
+    }
+}
+
+routes.updatefailed = async function routeUpdateFailed() {
+
+    const productName = sessionStorage.getItem('product_name');
+
+    if (!productName) {
+        navigateTo('#start');
+        return;
+    }
+
+    closePort(app);
+
+    loadViewTemplate('page_update_failed');
+
+    //app.div.querySelector('#product_name').textContent = productName;
+}
+
+routes.updatedone = async function routeUpdateDone() {
+
+    const productName = sessionStorage.getItem('product_name');
+
+    if (!productName) {
+        navigateTo('#start');
+        return;
+    }
+
+    closePort(app);
+
+    loadViewTemplate('page_update_done');
+    app.div.querySelector('#product_name').textContent = productName;
+}
+
+//-----------------------------------------------------------------------------
+
+// Parses an GCF file
+function gcfParseFile(dv) {
+    const res = {
+        valid: false,
+        dataOffset: 0,
+        fileType: 0,
+        targetAddress: 0,
+        crc8: 0,
+        crc32: 0,
+        size: 0 // from GCF header
+    };
+
+    let pos = 0;
+    const magic = dv.getUint32(pos, true);
+    pos += 4;
+
+    if (magic == 0xcafefeed) {
+        res.valid = true;
+        res.dataOffset = 14; // GCF header size
+        res.fileType = dv.getUint8(pos);
+        pos += 1;
+        res.targetAddress = dv.getUint32(pos, true);
+        pos += 4;
+        res.size = dv.getUint32(pos, true);
+        pos += 4;
+        res.crc8 = dv.getUint8(pos);
+        pos += 1;
+
+        if (res.fileType == 60) {
+            // magic1 is product specific
+            // 0xDEC0DE02 Hive
+            // 0xDEC0DE03 ConBee III
+            res.magic1 = dv.getUint32(pos, true);
+            pos += 4;
+
+            const totalSize = dv.getUint32(pos, true);
+            pos += 4;
+
+            if (totalSize !== res.size) {
+                res.valid = false;
+            }
+
+            const imageSize = dv.getUint32(pos, true);
+            pos += 4;
+
+            const imageType = dv.getUint32(pos, true);
+            pos += 4;
+
+            const imageTargetAddress = dv.getUint32(pos, true);
+            pos += 4;
+
+            const imagePlainSize = dv.getUint32(pos, true);
+            pos += 4;
+
+            res.crc32 = dv.getUint32(pos, true);
+            pos += 4;
+        } else if (res.fileType == 90) {
+            // FLS-M
+            // CRC32 is part of the header but not of the 'gcfFileSize'
+            res.crc32 = dv.getUint32(pos, true);
+            pos += 4;
+            res.dataOffset += 4;
+        } else {
+            // unknown
+            // ConBee 1 / RaspBee * / ConBee II currently not supported
+            res.valid = false;
+        }
+
+        if (res.size != (dv.byteLength - res.dataOffset)) {
+            res.valid = false;
+        }
+
+
+    }
+
+    return res;
+}
+
+function onPacket(app, pkg) {
+
+    if (app.dbg) {
+        const d = Array.from(pkg).map(x => x.toString(16).padStart(2,'0')).join(' ');
+        console.log(`packet: ${app.state}, [${d}]`);
+    }
+
+    if (app.state === COM_STATE_VX_WAIT_TIMER) {
+
+    } else if (pkg[0] == BTL_MAGIC) {
+        if (pkg[1] == BTL_FW_DATA_REQUEST && app.state == COM_STATE_V3_WAIT_DATA_REQ) {
+            stopStateTimer();
+            v3UpdateDataReq(app, pkg);
+        } else if ((app.state == COM_STATE_V3_WAIT_ID_RSP) && pkg[1] == BTL_ID_RESPONSE) {
+            stopStateTimer();
+            setTimeout(() => {
+                v3SendSyncReq(app);
+                startStateTimer(responseTimeout, 5000);
+            }, 201)
+        } else if (app.state === COM_STATE_V3_WAIT_ID_RSP_AFTER_UPDATE && pkg[1] == BTL_ID_RESPONSE) {
+            stopStateTimer();
+            v3VerifyAppCRC32(app, pkg);
+            app.state = COM_STATE_INIT;
+        } else if (app.state === COM_STATE_V3_WAIT_SYNC_RSP && pkg[1] == BTL_FW_UPDATE_RESPONSE) {
+
+            if (pkg[2] == 0) {
+                app.state = COM_STATE_V3_WAIT_DATA_REQ;
+                startStateTimer(responseTimeout, 5000);
+            } else {
+                console.log("BTL v3 sync failed with status", pkg[2]);
+            }
+            
+        } else {
+            console.log("unhandled packet: ", app.state, pkg);
+        }
+
+    } else if (pkg[0] == 0x0B && app.state == COM_STATE_VX_WAIT_RESET_RSP) {
+        // 0x0B, // command: write parmater
+        // the bootloader should now send a ID
+        app.state = COM_STATE_V3_WAIT_ID_RSP;
+        startStateTimer(responseTimeout, 5000);
+        //app.state = COM_STATE_V3_WAIT_SYNC_RSP;
+
+    }
+}
+
+async function onReceivedData(app, data) {
+    
+    // console.log("-----RX----- (", data.length, ")", app.state);
+
+    if (app.dbg && data[0] < 127) { // ASCII messages?
+        let i = 0;
+        for (; i < data.length; i++)
+            if (data[i] >= 127)
+                break;
+
+        if (i == data.length) { // all ASCII
+            try {
+                var string = new TextDecoder().decode(data);
+                console.log(string);
+            } catch (e) {
+            }
+        }
+    } /*else*/
+    
+    // if (app.dbg) {
+    //     const dbg = Array.from(data).map((x) => x.toString(16).padStart(2, '0'));
+    //     console.log(`recv (${data.length}): ${dbg.join(' ')}`);
+    // }
+
+    protReceiveFlagged(app, data);
+}
+
+async function readUntilClosed(app) {
+    const port = app.port;
+    while (port.readable && keepReading) {
+        portReader = port.readable.getReader();
+        try {
+            while (true) {
+                const { value, done } = await portReader.read();
+                if (done) {
+                    // portReader.cancel() has been called.
+                    break;
+                }
+                // value is a Uint8Array.
+                onReceivedData(app, value);
+            }
+        } catch (err) {
+            console.log(err);
+        } finally {
+                // Allow the serial port to be closed later.
+            portReader.releaseLock();
+        }
+    }
+    // await port.close();
+    // app.port = null;
+}
+
+function stopStateTimer() {
+    if (app.stateTimer) {
+        clearTimeout(app.stateTimer);
+        app.stateTimer = null;
+    }
+}
+
+function startStateTimer(callback, ms) {
+    stopStateTimer();
+
+    app.stateTimer = setTimeout(() => {
+        app.stateTimer = null;
+        callback();
+    }, ms);
+}
+
+function v3VerifyAppCRC32(app, pkg) {
+    let dv = new DataView(pkg.buffer);
+
+    let btlVersion = dv.getUint32(2, true);
+    let crc32 = dv.getUint32(6, true);
+
+    if (crc32 === app.gcfHeader.crc32) {
+        app.updateCallback({t: "verified", crc32, btlVersion});
+    } else {
+        app.updateCallback({err: "wrong_crc", crc32, btlVersion});
+    }
+
+    stopStateTimer();
+}
+
+function v3UpdateDataReq(app, pkg) {
+    if (pkg.length !== 8) {
+        // ignore
+        console.log("invalid v3 data request length: ", pkg.length);
+        return;
+    }
+
+    let dv = new DataView(pkg.buffer);
+    let pos = 2; // behind BTL magic and command
+
+    let offset = dv.getUint32(2, true);
+    let length = dv.getUint16(6, true);
+
+    if (offset === 0) { // update UI only at 30 fps
+        app.updateThrottle = Date.now();
+    }
+
+    app.outpkg = app.outpkg || new ArrayBuffer(512);
+    const arr = app.outpkg;
+
+    dv = new DataView(arr);
+    pos = 0;
+    dv.setUint8(pos, BTL_MAGIC);
+    pos += 1;
+    dv.setUint8(pos, BTL_FW_DATA_RESPONSE);
+    pos += 1;
+
+    let status = 0; // sucess
+    if ((offset + length) > app.gcfHeader.size) {
+        status = 1; // error
+    } else if (length > 256) {
+        status = 2; // error
+    } else if (length == 0) {
+        status = 3; // error
+    } else {
+        // Assert(gcf->file.gcfFileSize > offset);
+        app.remaining = app.gcfHeader.size - offset;
+        // Assert(gcf->remaining < MAX_GCF_FILE_SIZE);
+        length = length < app.remaining ? length : app.remaining;
+        // Assert(length > 0);
+    }
+
+    dv.setUint8(pos, status);
+    pos += 1;
+    dv.setUint32(pos, offset, true);
+    pos += 4;
+    dv.setUint16(pos, length, true);
+    pos += 2;
+
+    if (status == 0) {
+        if (app.remaining === length) {
+           app.updateCallback({t: 'done'});
+            app.state = COM_STATE_V3_WAIT_ID_RSP_AFTER_UPDATE;
+        } else {
+            const now = Date.now();
+            if ((1000/30) < (now - app.updateThrottle)) {
+                app.updateCallback({t: 'get', offset, length, remaining: app.remaining});
+                app.updateThrottle = now;
+            }
+        }
+
+        // Assert(length > 0)
+        offset += app.gcfHeader.dataOffset;
+        for (let i = 0; i < length; i++) {
+            let byte = app.gcfFileDataView.getUint8(offset + i);
+            dv.setUint8(pos, byte);
+            pos += 1;
+        }
+        startStateTimer(responseTimeout, 3000);
+    } else {
+        app.updateCallback({err: `v3 data request error: ${status}`});
+        app.state = COM_STATE_INIT;
+    }
+
+    return protSendFlagged(portWriter, new Uint8Array(arr.slice(0, pos)));
+}
+
+async function vxSendUartReset(app) {
+    console.log("BTL vx UART reset request");
+    //app.state = COM_STATE_VX_WAIT_RESET_RSP;
+    app.state = COM_STATE_VX_WAIT_TIMER;
+
+    const cmd = new Uint8Array([
+        0x0B, // command: write parmater
+        0x03, // seq
+        0x00, // status
+        0x0C, 0x00, // frame length (12)
+        0x05, 0x00, // buffer length (5)
+        0x26, // param: watchdog timout (2 seconds)
+        0x02, 0x00, 0x00, 0x00
+    ]);
+
+    return protSendFlagged(portWriter, cmd);
+}
+
+async function v3SendIdReq(app) {
+    console.log("BTL v3 ID request");
+    app.state = COM_STATE_V3_WAIT_ID_RSP;
+    return protSendFlagged(portWriter, new Uint8Array([0x81, 0x02]));
+}
+
+async function v3SendSyncReq(app) {
+    console.log("BTL v3 sync request");
+    app.state = COM_STATE_V3_WAIT_SYNC_RSP;
+
+//     C0 81  03  00  12  20 00  00 00 00 00   5A     5C   67   B7   C5    B1 FC   C0 (19)
+//        129, 3,  0, 18, 32, 0,  0, 0, 0, 0,  90,    92, 103, 183, 197
+// recv_packet: 818300 (3)
+// recv_packet: 8104000000004000 (8)
+
+    const arr = new ArrayBuffer(15);
+    const dv = new DataView(arr);
+    let pos = 0;
+    dv.setUint8(pos, BTL_MAGIC);
+    pos += 1;
+    dv.setUint8(pos, BTL_FW_UPDATE_REQUEST);
+    pos += 1;
+    dv.setUint32(pos, app.gcfHeader.size, true);
+    pos += 4;
+    dv.setUint32(pos, app.gcfHeader.targetAddress, true);
+    pos += 4;
+    dv.setUint8(pos, app.gcfHeader.fileType);
+    pos += 1;
+    dv.setUint32(pos, app.gcfHeader.crc32, true);
+    pos += 4;
+
+    return protSendFlagged(portWriter, new Uint8Array(arr));
+}
+
+function responseTimeout() {
+    if (app.updateCallback) {
+        app.updateCallback({err: 'rsp_timeout'});
+    }
+}
+
+function closePort(app) {
+    if (app.port) {
+        keepReading = false;
+        portReader.cancel();
+    }
+}
+
+async function updateFirmwareV3(app, cb) {
+    app.updateCallback = cb;
+    const port = app.port;
+    await port.open({baudRate: 115200});
+    app.rx.buf = new Uint8Array(2048);
+    portWriter = port.writable.getWriter();
+    readUntilClosed(app).then(() => {
+        portWriter.releaseLock();
+        port.close();
+        app.port = null;
+        portReader = null;
+        portWriter = null;
+        console.log("port closed");
+    });
+
+    if (sessionStorage.getItem('uart_reset') === '1') {
+        await vxSendUartReset(app);
+        startStateTimer(async () => {
+            //await v3SendSyncReq(app);
+            app.state = COM_STATE_V3_WAIT_ID_RSP;
+            startStateTimer(responseTimeout, 5000);
+        }, 50);
+    } else {
+        startStateTimer(responseTimeout, 2000);
+        app.state = COM_STATE_V3_WAIT_ID_RSP;
+    }
+        
+
+//    console.log("BTL v1 ID request");
+//    portWriter.write(new Uint8Array([0x49, 0x44]));
+
+    //console.log("query status");
+    //await protSendFlagged(portWriter, new Uint8Array([0x07, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00]));
+    //console.log("query firmware version");
+    //await protSendFlagged(portWriter, new Uint8Array([0x0D, 0x02, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00]));
+}
+
+function router() {
+    const r = location.hash.split('XX');
+
+    const hash = r[0].replace("#", "") || "start";
+
+    if (hash in routes) {
+        routes[hash]();
+    } else {
+        app.div.innerHTML = "<h1>404 - Page Not Found</h1>";
+    }
+}
+
+window.addEventListener("load", onSideLoad);
+window.addEventListener("hashchange", router);
+window.addEventListener("load", router);
+
+window.addEventListener("popstate", (event) => {
+  
+});
+
+async function onSideLoad() {
+    app.div = document.getElementById("app");
+
+    if (location.search.indexOf('debug') !== -1)
+        app.dbg =  true;
+}
+
+</script>
+
+</html>
