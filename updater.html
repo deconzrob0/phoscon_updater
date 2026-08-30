@@ -795,14 +795,15 @@ routes.waitdisconnect = async function routeWaitDisconnect() {
    
     app.div.querySelector('#product_name').textContent = productName;
 
-    let disco = (event) => {
+    app.disconnectHandler = (event) => {
         console.log("disconnect event:", event.target);
-        navigator.serial.removeEventListener("disconnect", disco);
+        navigator.serial.removeEventListener("disconnect", app.disconnectHandler);
+        app.disconnectHandler = null;
 
         navigateTo('#waitunplugged');
     };
 
-    navigator.serial.addEventListener("disconnect", disco);
+    navigator.serial.addEventListener("disconnect", app.disconnectHandler);
     
 }
 
@@ -824,11 +825,12 @@ routes.waitunplugged = async function routeWaitUnplugged() {
 
     durText.textContent = duration;
 
-    let timerId = setInterval(() => {
+    app.unpluggedTimer = setInterval(() => {
         duration -= 1;
         durText.textContent = duration;
         if (duration === 0) {
-            clearInterval(timerId);
+            clearInterval(app.unpluggedTimer);
+            app.unpluggedTimer = null;
             navigateTo('#waitreconnect');
         }
     }, 1000) ;
@@ -847,13 +849,14 @@ routes.waitreconnect = async function routeWaitReconnect() {
 
     app.div.querySelector('#product_name').textContent = productName;
 
-    const conn = (event) => {
+    app.connectHandler = (event) => {
         app.port = event.target;
-        navigator.serial.removeEventListener("connect", conn);
+        navigator.serial.removeEventListener("connect", app.connectHandler);
+        app.connectHandler = null;
         navigateTo('#updating');
     };
 
-    navigator.serial.addEventListener("connect", conn);
+    navigator.serial.addEventListener("connect", app.connectHandler);
 }
 
 routes.updating = async function routeUpdating() {
@@ -1018,7 +1021,9 @@ function onPacket(app, pkg) {
     }
 
     if (app.state === COM_STATE_VX_WAIT_TIMER) {
-
+        if (app.dbg) {
+            console.log("ignoring packet during UART reset window:", app.state, pkg);
+        }
     } else if (pkg[0] == BTL_MAGIC) {
         if (pkg[1] == BTL_FW_DATA_REQUEST && app.state == COM_STATE_V3_WAIT_DATA_REQ) {
             stopStateTimer();
@@ -1085,27 +1090,26 @@ async function onReceivedData(app, data) {
 
 async function readUntilClosed(app) {
     const port = app.port;
-    while (port.readable && keepReading) {
-        portReader = port.readable.getReader();
-        try {
-            while (true) {
-                const { value, done } = await portReader.read();
-                if (done) {
-                    // portReader.cancel() has been called.
-                    break;
-                }
-                // value is a Uint8Array.
-                onReceivedData(app, value);
-            }
-        } catch (err) {
-            console.log(err);
-        } finally {
-                // Allow the serial port to be closed later.
-            portReader.releaseLock();
-        }
+    if (!port.readable) {
+        return;
     }
-    // await port.close();
-    // app.port = null;
+    portReader = port.readable.getReader();
+    try {
+        while (keepReading) {
+            const { value, done } = await portReader.read();
+            if (done) {
+                // portReader.cancel() has been called.
+                break;
+            }
+            // value is a Uint8Array.
+            onReceivedData(app, value);
+        }
+    } catch (err) {
+        console.log(err);
+    } finally {
+        // Always release the reader lock so the port can be closed later.
+        portReader.releaseLock();
+    }
 }
 
 function stopStateTimer() {
@@ -1122,6 +1126,23 @@ function startStateTimer(callback, ms) {
         app.stateTimer = null;
         callback();
     }, ms);
+}
+
+// Clear route-local resources (timers, event listeners) so they don't
+// outlive the route they were created in. Called before each route renders.
+function clearRouteCleanup() {
+    if (app.unpluggedTimer) {
+        clearInterval(app.unpluggedTimer);
+        app.unpluggedTimer = null;
+    }
+    if (app.disconnectHandler) {
+        navigator.serial.removeEventListener("disconnect", app.disconnectHandler);
+        app.disconnectHandler = null;
+    }
+    if (app.connectHandler) {
+        navigator.serial.removeEventListener("connect", app.connectHandler);
+        app.connectHandler = null;
+    }
 }
 
 function v3VerifyAppCRC32(app, pkg) {
@@ -1277,7 +1298,9 @@ function responseTimeout() {
 function closePort(app) {
     if (app.port) {
         keepReading = false;
-        portReader.cancel();
+        if (portReader) {
+            portReader.cancel();
+        }
     }
 }
 
@@ -1322,6 +1345,9 @@ function router() {
     const r = location.hash.split('XX');
 
     const hash = r[0].replace("#", "") || "start";
+
+    // Clear route-local resources (timers, listeners) before rendering.
+    clearRouteCleanup();
 
     if (hash in routes) {
         routes[hash]();
